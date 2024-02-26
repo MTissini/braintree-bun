@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import PaymentProcessor from './lib/Braintree';
+import { processPayment, generateClientToken } from './lib/Braintree'
 
 const app = new Hono()
 app.use('*', cors());
@@ -10,11 +10,16 @@ app.get('/', (c) => {
 })
 
 app.post('/checkout', async (c) => {
-  const { paymentMethodNonce } = await c.req.json();
-  const amount = "35.0"
-  const paymentProcessor = await new PaymentProcessor().processPayment(amount, paymentMethodNonce);
+  const { paymentMethodNonce, amount } = await c.req.json();
+  const paymentProcessor = await processPayment(amount, paymentMethodNonce);
   return c.json(paymentProcessor);
-})
+
+});
+
+app.get('/checkout/generate-token', async (c) => {
+  const clientToken = await generateClientToken();
+  return c.json(clientToken);
+});
 
 export default {
   port: 8081,
